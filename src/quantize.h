@@ -75,7 +75,6 @@ class QuantizedNN {
         }
     }
 
-    void testFen(const std::string& fen);
     const int32_t forward(Accumulator& accumulator, Features& features, Color stm) const;
 
     friend std::ostream& operator<<(std::ostream& os, const QuantizedNN& nn) {

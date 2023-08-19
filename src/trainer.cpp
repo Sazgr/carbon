@@ -1,17 +1,12 @@
 #include "trainer.h"
 #include "nn.h"
 #include "optimizer.h"
-#include <omp.h>
+#include <functional>
 
 #define EPOCH_ERROR epochError / static_cast<double>(dataSetLoader.batchSize * batchIterations)
 
 inline float expectedEval(float eval, float wdl, float lambda) {
     return lambda * sigmoid(eval) + (1 - lambda) * wdl;
-}
-
-inline float errorFunction(float output, float eval, float wdl) {
-    float expected = EVAL_CP_RATIO * sigmoid(eval) + (1 - EVAL_CP_RATIO) * wdl;
-    return pow(sigmoid(output) - expected, 2);
 }
 
 inline float errorGradient(float output, float eval, float wdl) {
@@ -27,12 +22,9 @@ inline float errorGradient(float output, float expected) {
     return 2 * (sigmoid(output) - expected);
 }
 
-void Trainer::batch(std::array<uint8_t, INPUT_SIZE>& active) {
-    std::array<std::array<uint8_t, INPUT_SIZE>, THREADS> actives;
-    std::memset(actives.data(), 0, sizeof(actives));
-#pragma omp parallel for schedule(static) num_threads(THREADS)
-    for (int batchIdx = 0; batchIdx < dataSetLoader.batchSize; batchIdx++) {
-        const int threadId = omp_get_thread_num();
+void Trainer::batch_thread(int thread_id, std::array<uint8_t, INPUT_SIZE>& active, std::array<std::array<uint8_t, INPUT_SIZE>, THREADS> actives) {
+    for (int batchIdx = thread_id; batchIdx < dataSetLoader.batchSize; batchIdx += THREADS) {
+        const int threadId = thread_id;
 
         // Load the current batch entry
         DataLoader::DataSetEntry& entry = dataSetLoader.getEntry(batchIdx);
@@ -61,20 +53,20 @@ void Trainer::batch(std::array<uint8_t, INPUT_SIZE>& active) {
         gradients.hiddenBias[0] += outGradient;
 
         // Hidden features
-#pragma omp simd
+//simd later
         for (int i = 0; i < HIDDEN_SIZE * 2; ++i) {
             gradients.hiddenFeatures[i] += outGradient * accumulator[i];
         }
 
         std::array<float, HIDDEN_SIZE * 2> hiddenLosses;
 
-#pragma omp simd
+//simd later
         for (int i = 0; i < HIDDEN_SIZE * 2; ++i) {
             hiddenLosses[i] = outGradient * nn.hiddenFeatures[i] * ReLUPrime(accumulator[i]);
         }
 
         // Input bias
-#pragma omp simd
+//simd later
         for (int i = 0; i < HIDDEN_SIZE; ++i) {
             gradients.inputBias[i] += hiddenLosses[i] + hiddenLosses[i + HIDDEN_SIZE];
         }
@@ -87,15 +79,28 @@ void Trainer::batch(std::array<uint8_t, INPUT_SIZE>& active) {
             actives[threadId][f1] = 1;
             actives[threadId][f2] = 1;
 
-#pragma omp simd
+//simd later
             for (int j = 0; j < HIDDEN_SIZE; ++j) {
                 gradients.inputFeatures[f1 * HIDDEN_SIZE + j] += hiddenLosses[j];
                 gradients.inputFeatures[f2 * HIDDEN_SIZE + j] += hiddenLosses[j + HIDDEN_SIZE];
             }
         }
     }
+}
 
-#pragma for schedule(static) num_threads(THREADS)
+void Trainer::batch(std::array<uint8_t, INPUT_SIZE>& active) {
+    std::array<std::array<uint8_t, INPUT_SIZE>, THREADS> actives;
+    std::memset(actives.data(), 0, sizeof(actives));
+
+    std::vector<std::thread> thread_pool;
+    auto batch_thread_fun = std::bind(&Trainer::batch_thread, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+    for (int thread_id = 0; thread_id < THREADS; ++thread_id) {
+        thread_pool.emplace_back(batch_thread_fun, thread_id, std::ref(active), std::ref(actives));
+    }
+    for (auto& thread : thread_pool) {
+        thread.join();
+    }
+//too lazy to parallelize
     for (int i = 0; i < INPUT_SIZE; ++i) {
         for (int j = 0; j < THREADS; ++j) {
             active[i] |= actives[j][i];
@@ -103,9 +108,8 @@ void Trainer::batch(std::array<uint8_t, INPUT_SIZE>& active) {
     }
 }
 
-void        Trainer::applyGradients(std::array<uint8_t, INPUT_SIZE>& actives) {
-#pragma omp parallel for schedule(static) num_threads(THREADS)
-    for (int i = 0; i < INPUT_SIZE; ++i) {
+void        Trainer::applyGradients_thread(int thread_id, std::array<uint8_t, INPUT_SIZE>& actives) {
+    for (int i = thread_id; i < INPUT_SIZE; i += THREADS) {
         if (!actives[i])
             continue;
 
@@ -120,9 +124,7 @@ void        Trainer::applyGradients(std::array<uint8_t, INPUT_SIZE>& actives) {
             optimizer.update(nn.inputFeatures[index], nnGradients.inputFeatures[index], gradientSum, learningRate);
         }
     }
-
-#pragma omp parallel for schedule(static) num_threads(THREADS)
-    for (int i = 0; i < HIDDEN_SIZE; ++i) {
+    for (int i = thread_id; i < HIDDEN_SIZE; i += THREADS) {
         float gradientSum = 0;
 
         for (int j = 0; j < THREADS; ++j) {
@@ -131,10 +133,7 @@ void        Trainer::applyGradients(std::array<uint8_t, INPUT_SIZE>& actives) {
 
         optimizer.update(nn.inputBias[i], nnGradients.inputBias[i], gradientSum, learningRate);
     }
-
-    // --- Hidden Features ---//
-#pragma omp parallel for schedule(static) num_threads(THREADS)
-    for (int i = 0; i < HIDDEN_SIZE * 2; ++i) {
+    for (int i = thread_id; i < HIDDEN_SIZE * 2; i += THREADS) {
         float gradientSum = 0;
 
         for (int j = 0; j < THREADS; ++j) {
@@ -143,7 +142,19 @@ void        Trainer::applyGradients(std::array<uint8_t, INPUT_SIZE>& actives) {
 
         optimizer.update(nn.hiddenFeatures[i], nnGradients.hiddenFeatures[i], gradientSum, learningRate);
     }
+}
 
+void        Trainer::applyGradients(std::array<uint8_t, INPUT_SIZE>& actives) {
+{
+    std::vector<std::thread> thread_pool;
+    auto applyGradients_thread_fun = std::bind(&Trainer::applyGradients_thread, this, std::placeholders::_1, std::placeholders::_2);
+    for (int thread_id = 0; thread_id < THREADS; ++thread_id) {
+        thread_pool.emplace_back(applyGradients_thread_fun, thread_id, std::ref(actives));
+    }
+    for (auto& thread : thread_pool) {
+        thread.join();
+    }
+}
     //-- Hidden Bias --//
     float gradientSum = 0;
     for (int i = 0; i < THREADS; ++i) {
@@ -225,10 +236,9 @@ void Trainer::clearGradientsAndLosses() {
     memset(losses.data(), 0, sizeof(float) * THREADS);
 }
 
-void        Trainer::validationBatch(std::vector<float>& validationLosses) {
-#pragma omp parallel for schedule(static) num_threads(THREADS)
-    for (int batchIdx = 0; batchIdx < valDataSetLoader.batchSize; batchIdx++) {
-        const int threadId = omp_get_thread_num();
+void        Trainer::validationBatch_thread(int thread_id, std::vector<float>& validationLosses) {
+    for (int batchIdx = thread_id; batchIdx < valDataSetLoader.batchSize; batchIdx += THREADS) {
+        const int threadId = thread_id;
 
         // Load the current batch entry
         DataLoader::DataSetEntry& entry = valDataSetLoader.getEntry(batchIdx);
@@ -246,6 +256,17 @@ void        Trainer::validationBatch(std::vector<float>& validationLosses) {
         const float output = nn.forward(accumulator, featureset, stm);
 
         validationLosses[threadId] += errorFunction(output, eval, wdl);
+    }
+}
+
+void        Trainer::validationBatch(std::vector<float>& validationLosses) {
+    std::vector<std::thread> thread_pool;
+    auto validationBatch_thread_fun = std::bind(&Trainer::validationBatch_thread, this, std::placeholders::_1, std::placeholders::_2);
+    for (int thread_id = 0; thread_id < THREADS; ++thread_id) {
+        thread_pool.emplace_back(validationBatch_thread_fun, thread_id, std::ref(validationLosses));
+    }
+    for (auto& thread : thread_pool) {
+        thread.join();
     }
 }
 

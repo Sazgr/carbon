@@ -24,7 +24,7 @@ static inline void vecReLU(float* v) {
 }
 
 template<std::size_t N>
-float vecDotProduct(float* v1, float* v2) {
+float vecDotProduct(const float* v1, float* v2) {
   constexpr size_t width = sizeof(__m256) / sizeof(float);
   constexpr size_t chunks = N / width;
 
@@ -61,6 +61,11 @@ static inline const T sigmoidPrime(const T x){
     return sigmoid(x) * (1 - sigmoid(x));
 }
 
+inline float errorFunction(float output, float eval, float wdl) {
+    float expected = EVAL_CP_RATIO * sigmoid(eval) + (1 - EVAL_CP_RATIO) * wdl;
+    return pow(sigmoid(output) - expected, 2);
+}
+
 struct Features
 {
     uint8_t n = 0;
@@ -84,7 +89,7 @@ struct NN {
 
     std::array<float, INPUT_SIZE * HIDDEN_SIZE> inputFeatures;
     std::array<float, HIDDEN_SIZE> inputBias;
-    std::array<float, HIDDEN_SIZE * 2> hiddenFeatures;
+    alignas(32) std::array<float, HIDDEN_SIZE * 2> hiddenFeatures;
     std::array<float, OUTPUT_SIZE> hiddenBias;
 
     NN(){
@@ -106,7 +111,6 @@ struct NN {
     }
 
     float forward(Accumulator& accumulator, Features& features, Color stm) const;
-    void testFen(const std::string& fen) const;
     void load(const std::string& path);
     void save(const std::string& path);
     void quantize(const std::string& path, bool print = false);

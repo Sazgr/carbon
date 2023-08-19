@@ -5,47 +5,10 @@
 #include <memory>
 #include <fstream>
 #include <iostream>
-#include <omp.h>
-
-float errorFunction(float output, float eval, float wdl) {
-    float expected = EVAL_CP_RATIO * sigmoid(eval) + (1 - EVAL_CP_RATIO) * wdl;
-    return pow(sigmoid(output) - expected, 2);
-}
 
 float errorGradient(float output, float eval, float wdl) {
     float expected = EVAL_CP_RATIO * sigmoid(eval) + (1 - EVAL_CP_RATIO) * wdl;
     return 2 * (sigmoid(output) - expected);
-}
-
-void NN::testFen(const std::string& fen) const {
-    chess::Position pos{chess::Position::fromFen(fen)};
-
-    Features features;
-
-    chess::Bitboard        pieces = pos.piecesBB();
-
-    const chess::Square ksq_White = pos.kingSquare(chess::Color::White);
-    const chess::Square ksq_Black = pos.kingSquare(chess::Color::Black);
-
-    for (chess::Square sq : pieces) {
-        const chess::Piece piece      = pos.pieceAt(sq);
-        const std::uint8_t pieceType  = static_cast<uint8_t>(piece.type());
-        const std::uint8_t pieceColor = static_cast<uint8_t>(piece.color());
-
-        const int featureW = inputIndex(pieceType, pieceColor, static_cast<int>(sq), static_cast<uint8_t>(chess::Color::White), static_cast<int>(ksq_White));
-        const int featureB = inputIndex(pieceType, pieceColor, static_cast<int>(sq), static_cast<uint8_t>(chess::Color::Black), static_cast<int>(ksq_Black));
-
-        features.add(featureW, featureB);
-    }
-
-    Accumulator accumulator;
-    Color       stm = Color(pos.sideToMove());
-    
-    std::cout << "Score: " << forward(accumulator, features, stm) << std::endl;
-    for (int i = 0; i < 16; ++i) {
-        std::cout << std::setw(5) << accumulator[i] << " ";
-    }
-    std::cout << std::endl;
 }
 
 // The forward pass of the network
@@ -67,15 +30,17 @@ float NN::forward(Accumulator& accumulator, Features& features, Color stm) const
     
     vecReLU<HIDDEN_SIZE * 2>(accumulator.data());
 
-    #pragma omp simd reduction(+:output)
-    for (int i = 0; i < HIDDEN_SIZE; ++i){
+    //simd later reduction(+:output)
+    output += vecDotProduct<HIDDEN_SIZE>(&hiddenFeatures[0], stmAccumulator);
+    output += vecDotProduct<HIDDEN_SIZE>(&hiddenFeatures[HIDDEN_SIZE], nstmAccumulator);
+    /*for (int i = 0; i < HIDDEN_SIZE; ++i){
         output += hiddenFeatures[i] * stmAccumulator[i];
     }
 
-    #pragma omp simd reduction(+:output)
+    //simd later reduction(+:output)
     for (int i = 0; i < HIDDEN_SIZE; ++i){
         output += hiddenFeatures[HIDDEN_SIZE + i] * nstmAccumulator[i];
-    }
+    }*/
     
     return output;
 }

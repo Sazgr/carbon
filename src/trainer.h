@@ -52,8 +52,11 @@ public:
 
     void   clearGradientsAndLosses();
     void   train();
+    void   batch_thread(int thread_id, std::array<uint8_t, INPUT_SIZE>& active, std::array<std::array<uint8_t, INPUT_SIZE>, THREADS> actives);
     void   batch(std::array<uint8_t, INPUT_SIZE>& active);
+    void   applyGradients_thread(int thread_id, std::array<uint8_t, INPUT_SIZE>& actives);
     void   applyGradients(std::array<uint8_t, INPUT_SIZE>& active);
+    void   validationBatch_thread(int thread_id, std::vector<float>& validationLosses);
     void   validationBatch(std::vector<float>&);
     double validate();
 

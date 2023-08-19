@@ -2,12 +2,6 @@
 
 #include "types.h"
 
-// turn off warnings for this
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wall"
-#include "binpack/nnue_data_binpack_format.h"
-#pragma GCC diagnostic pop
-
 #include <algorithm>
 #include <fstream>
 #include <numeric>
@@ -24,14 +18,18 @@ struct Features;
 namespace DataLoader {
 
     struct DataSetEntry {
-        binpack::TrainingDataEntry entry;
+        std::array<std::uint64_t, 13> entry_bb{};
+        std::array<int, 64> entry_pos{12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12, 12};
+        std::uint64_t stm;
+        float entry_score;
+        float entry_result;
 
         const float score() const {
-            return entry.score / EVAL_SCALE;
+            return entry_score / EVAL_SCALE;
         }
 
         const float wdl() const {
-            return entry.result == -1 ? 1.0 : entry.result == 0 ? 0.5 : 0.0;
+            return entry_result == -1 ? 1.0 : entry_result == 0 ? 0.5 : 0.0;
         }
 
         const float target() const {
@@ -42,7 +40,7 @@ namespace DataLoader {
         }
 
         const auto sideToMove() const {
-            return entry.pos.sideToMove();
+            return stm;
         }
 
         void loadFeatures(Features& features) const;
@@ -54,7 +52,7 @@ namespace DataLoader {
         std::array<DataSetEntry, CHUNK_SIZE> nextData;
         std::array<int, CHUNK_SIZE>            permuteShuffle;
 
-        binpack::CompressedTrainingDataEntryReader reader;
+        std::ifstream reader;
         std::string                                path;
         std::size_t batchSize     = 16384;
         std::size_t positionIndex = 0;

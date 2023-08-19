@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cassert>
 #include <cstdint>
 #include <array>
 #include <random>
@@ -8,7 +9,7 @@
 #include <chrono>
 #include <iomanip>
 
-constexpr int BUCKETS = 4;
+constexpr int BUCKETS = 1;
 constexpr int INPUT_SIZE = 64 * 6 * 2 * BUCKETS;
 constexpr int HIDDEN_SIZE = 256;
 constexpr int OUTPUT_SIZE = 1;
@@ -16,7 +17,7 @@ constexpr int OUTPUT_SIZE = 1;
 constexpr float EVAL_SCALE = 400.0f;
 constexpr float EVAL_CP_RATIO = 0.7f;
 
-constexpr int THREADS = 6;
+constexpr int THREADS = 8;
 
 constexpr std::size_t EPOCH_SIZE = 1e9;
 constexpr std::size_t VAL_EPOCH_SIZE = 1e7;
@@ -41,14 +42,14 @@ static inline int kingSquareIndex(int kingSquare, uint8_t kingColor) {
     }
 }
 
-static inline int inputIndex(uint8_t pieceType, uint8_t pieceColor, int square, uint8_t view, int kingSquare) {
+static inline int inputIndex(uint8_t piece, int square, uint8_t view, int kingSquare) {
+    assert(square >= 0 && square < 64);
+    assert(piece < 12 && piece >= 0);
     const int ksIndex = kingSquareIndex(kingSquare, view);
-    square = square ^ (56 * view);
+    square = square ^ 56 ^ (56 * view);
     square = square ^ (7 * !!(kingSquare & 0x4));
 
     // clang-format off
-    return square
-           + pieceType * 64
-           + !(pieceColor ^ view) * 64 * 6 + ksIndex * 64 * 6 * 2;
+    return square + (piece ^ view) * 64 + ksIndex * 64 * 6 * 2;
     // clang-format on
 }

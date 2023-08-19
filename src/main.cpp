@@ -2,7 +2,6 @@
 #include "trainer.h"
 #include "quantize.h"
 
-#include <omp.h>
 #include <sstream>
 
 int main(int argc, char* argv[]) {
@@ -71,7 +70,7 @@ int main(int argc, char* argv[]) {
     std::cout << "End Lambda: " << trainer->getEndLambda() << "\n";
     std::cout << "Epochs: " << trainer->getMaxEpochs() << "\n";
     std::cout << "Batchsize: " << trainer->getBatchSize() << "\n\n";
-    std::cout << "Number of Available Threads: " << omp_get_max_threads() << "\n";
+    std::cout << "Number of Available Threads: " << 8 << "\n";
     std::cout << "Allocated threads: " << THREADS << "\n";
     std::cout << std::endl;
     

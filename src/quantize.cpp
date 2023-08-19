@@ -2,33 +2,6 @@
 #include "dataloader.h"
 #include "nn.h"
 
-void QuantizedNN::testFen(const std::string& fen){
-    chess::Position pos{chess::Position::fromFen(fen)};
-
-    Features features;
-
-    chess::Bitboard        pieces = pos.piecesBB();
-
-    const chess::Square ksq_White = pos.kingSquare(chess::Color::White);
-    const chess::Square ksq_Black = pos.kingSquare(chess::Color::Black);
-
-    for (chess::Square sq : pieces) {
-        const chess::Piece piece      = pos.pieceAt(sq);
-        const std::uint8_t pieceType  = static_cast<uint8_t>(piece.type());
-        const std::uint8_t pieceColor = static_cast<uint8_t>(piece.color());
-
-        const int featureW = inputIndex(pieceType, pieceColor, static_cast<int>(sq), static_cast<uint8_t>(chess::Color::White), static_cast<int>(ksq_White));
-        const int featureB = inputIndex(pieceType, pieceColor, static_cast<int>(sq), static_cast<uint8_t>(chess::Color::Black), static_cast<int>(ksq_Black));
-
-        features.add(featureW, featureB);
-    }
-
-    Accumulator accumulator;
-    Color       stm = Color(pos.sideToMove());
-    
-    std::cout << "Score: " << forward(accumulator, features, stm) << std::endl;
-}
-
 const int32_t QuantizedNN::forward(Accumulator& accumulator, Features& features, Color stm) const{
     int32_t output = hiddenBias[0]; // Initialize with the bias
 
