@@ -17,9 +17,9 @@ constexpr int OUTPUT_SIZE = 1;
 constexpr float EVAL_SCALE = 400.0f;
 constexpr float EVAL_CP_RATIO = 0.7f;
 
-constexpr int THREADS = 8;
+constexpr int THREADS = 6;
 
-constexpr std::size_t EPOCH_SIZE = 1e8;
+constexpr std::size_t EPOCH_SIZE = 1e9;
 constexpr std::size_t VAL_EPOCH_SIZE = 1e7;
 
 constexpr int KING_BUCKET[64] {

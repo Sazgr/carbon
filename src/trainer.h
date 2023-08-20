@@ -22,7 +22,7 @@ private:
     float       learningRate = 0.01;
 
     int   lrDecayInterval = 15;
-    float lrDecay         = 0.05;
+    float lrDecay         = 0.3;
     int   saveInterval    = 1;
 
     float start_lambda = 1;
