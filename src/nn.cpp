@@ -7,11 +7,6 @@
 #include <iostream>
 #include <omp.h>
 
-float errorFunction(float output, float eval, float wdl) {
-    float expected = EVAL_CP_RATIO * sigmoid(eval) + (1 - EVAL_CP_RATIO) * wdl;
-    return pow(sigmoid(output) - expected, 2);
-}
-
 float errorGradient(float output, float eval, float wdl) {
     float expected = EVAL_CP_RATIO * sigmoid(eval) + (1 - EVAL_CP_RATIO) * wdl;
     return 2 * (sigmoid(output) - expected);
@@ -65,7 +60,10 @@ float NN::forward(Accumulator& accumulator, const Features& features, Color stm)
         }
     }
     
-    vecReLU<HIDDEN_SIZE * 2>(accumulator.data());
+    #pragma omp simd reduction(+:output)
+    for (int i = 0; i < 2 * HIDDEN_SIZE; ++i){
+        accumulator[i] = ReLU(accumulator[i]);
+    }
 
     #pragma omp simd reduction(+:output)
     for (int i = 0; i < HIDDEN_SIZE; ++i){

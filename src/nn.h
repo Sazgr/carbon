@@ -61,6 +61,11 @@ static inline const T sigmoidPrime(const T x){
     return sigmoid(x) * (1 - sigmoid(x));
 }
 
+inline float errorFunction(float output, float eval, float wdl) {
+    float expected = EVAL_CP_RATIO * sigmoid(eval) + (1 - EVAL_CP_RATIO) * wdl;
+    return pow(sigmoid(output) - expected, 2);
+}
+
 struct Features
 {
     uint8_t n = 0;

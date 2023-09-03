@@ -9,11 +9,6 @@ inline float expectedEval(float eval, float wdl, float lambda) {
     return lambda * sigmoid(eval) + (1 - lambda) * wdl;
 }
 
-inline float errorFunction(float output, float eval, float wdl) {
-    float expected = EVAL_CP_RATIO * sigmoid(eval) + (1 - EVAL_CP_RATIO) * wdl;
-    return pow(sigmoid(output) - expected, 2);
-}
-
 inline float errorGradient(float output, float eval, float wdl) {
     float expected = EVAL_CP_RATIO * sigmoid(eval) + (1 - EVAL_CP_RATIO) * wdl;
     return 2 * (sigmoid(output) - expected);
@@ -204,7 +199,7 @@ void Trainer::train() {
         }
 
         // Decay learning rate
-        // lrScheduler.step(learningRate, currentEpoch);
+        lrScheduler.step(learningRate);
 
         double valError = validate();
         std::cout << std::endl;
