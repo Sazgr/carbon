@@ -41,6 +41,28 @@ namespace Optimizer {
         }
     };
 
+    class AdamW : public Optimizer {
+    public:
+        static constexpr float DEFAULT_BETA1         = BETA1;
+        static constexpr float DEFAULT_BETA2         = BETA2;
+        static constexpr float DEFAULT_EPSILON       = EPSILON;
+
+        float beta1   = DEFAULT_BETA1;
+        float beta2   = DEFAULT_BETA2;
+        float epsilon = DEFAULT_EPSILON;
+
+        AdamW(float _beta1 = DEFAULT_BETA1, float _beta2 = DEFAULT_BETA2, float _epsilon = DEFAULT_EPSILON) : beta1(_beta1), beta2(_beta2), epsilon(_epsilon) {
+            
+        }
+
+        void update(float& v, Gradient& grad, const float gsum, const float learningRate);
+
+        friend std::ostream& operator<<(std::ostream& os, const AdamW& adamw) {
+            os << "AdamW(" << "beta1=" << adamw.beta1 << ", beta2=" << adamw.beta2 << ", epsilon=" << adamw.epsilon << ")";
+            return os;
+        }
+    };
+
     class Adamax : public Optimizer {
     public:
         static constexpr float DEFAULT_BETA1         = BETA1;
