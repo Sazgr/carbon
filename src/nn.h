@@ -11,6 +11,11 @@ static inline const T ReLU(const T x){
     return std::max<T>(0, x);
 }
 
+template<typename T = float>
+static inline const T CReLU(const T x){
+    return std::clamp<T>(x, 0, 1);
+}
+
 template<std::size_t N>
 static inline void vecReLU(float* v) {
   constexpr size_t width = sizeof(__m256) / sizeof(float);
@@ -49,6 +54,11 @@ float vecDotProduct(float* v1, float* v2) {
 template<typename T = float>
 static inline const T ReLUPrime(const T x){
     return x > 0 ? 1 : 0;
+} 
+
+template<typename T = float>
+static inline const T CReLUPrime(const T x){
+    return x > 0 && x < 1 ? 1 : 0;
 } 
 
 template<typename T = float>
