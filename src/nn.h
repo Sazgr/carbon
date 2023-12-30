@@ -6,7 +6,7 @@
 #include <immintrin.h>
 #include "types.h"
 
-template<typename T = float>
+/*template<typename T = float>
 static inline const T ReLU(const T x){
     return std::max<T>(0, x);
 }
@@ -14,6 +14,12 @@ static inline const T ReLU(const T x){
 template<typename T = float>
 static inline const T CReLU(const T x){
     return std::clamp<T>(x, 0, 1);
+}*/
+
+template<typename T = float>
+static inline const T SCReLU(const T x){
+    T clipped = std::clamp<T>(x, 0, 1);
+    return clipped * clipped;
 }
 
 template<std::size_t N>
@@ -51,7 +57,7 @@ float vecDotProduct(float* v1, float* v2) {
   return _mm_cvtss_f32(r1);
 }
 
-template<typename T = float>
+/*template<typename T = float>
 static inline const T ReLUPrime(const T x){
     return x > 0 ? 1 : 0;
 } 
@@ -59,6 +65,11 @@ static inline const T ReLUPrime(const T x){
 template<typename T = float>
 static inline const T CReLUPrime(const T x){
     return x > 0 && x < 1 ? 1 : 0;
+}*/
+
+template<typename T = float>
+static inline const T SCReLUPrime(const T x){
+    return x > 0 && x < 1 ? 2 * x : 0;
 } 
 
 template<typename T = float>

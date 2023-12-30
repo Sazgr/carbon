@@ -60,9 +60,9 @@ float NN::forward(Accumulator& accumulator, const Features& features, Color stm)
         }
     }
     
-    #pragma omp simd reduction(+:output)
+    #pragma omp simd
     for (int i = 0; i < 2 * HIDDEN_SIZE; ++i){
-        accumulator[i] = CReLU(accumulator[i]);
+        accumulator[i] = SCReLU(accumulator[i]);
     }
 
     #pragma omp simd reduction(+:output)

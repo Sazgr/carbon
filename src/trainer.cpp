@@ -63,7 +63,7 @@ void Trainer::batch(std::array<uint8_t, INPUT_SIZE>& active) {
 
 #pragma omp simd
         for (int i = 0; i < HIDDEN_SIZE * 2; ++i) {
-            hiddenLosses[i] = outGradient * nn.hiddenFeatures[i] * CReLUPrime(accumulator[i]);
+            hiddenLosses[i] = outGradient * nn.hiddenFeatures[i] * SCReLUPrime(accumulator[i]);
         }
 
         // Input bias
