@@ -36,7 +36,7 @@ public:
     std::vector<BatchGradients>            batchGradients;
     std::vector<float>                     losses;
     LearningRateScheduler::ExponentialDecay lrScheduler;
-    Optimizer::Adam                        optimizer;
+    Optimizer::AdamW                        optimizer;
 
     // clang-format off
     Trainer(const std::string& _path, const std::size_t _batchSize, const std::string& val_path = "") : 
