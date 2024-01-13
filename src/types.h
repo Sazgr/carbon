@@ -8,7 +8,7 @@
 #include <chrono>
 #include <iomanip>
 
-constexpr int BUCKETS = 1;
+constexpr int BUCKETS = 4;
 constexpr int INPUT_SIZE = 64 * 6 * 2 * BUCKETS;
 constexpr int HIDDEN_SIZE = 512;
 constexpr int OUTPUT_SIZE = 1;
