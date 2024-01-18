@@ -34,9 +34,10 @@ void NN::testFen(const std::string& fen) const {
     }
 
     Accumulator accumulator;
+    Accumulator activated;
     Color       stm = Color(pos.sideToMove());
     
-    std::cout << "Score: " << forward(accumulator, features, stm) << std::endl;
+    std::cout << "Score: " << forward(accumulator, activated, features, stm) << std::endl;
     for (int i = 0; i < 16; ++i) {
         std::cout << std::setw(5) << accumulator[i] << " ";
     }
@@ -44,7 +45,7 @@ void NN::testFen(const std::string& fen) const {
 }
 
 // The forward pass of the network
-float NN::forward(Accumulator& accumulator, const Features& features, Color stm) const {
+float NN::forward(Accumulator& accumulator, Accumulator& activated, const Features& features, Color stm) const {
     float output = hiddenBias[0]; // Initialize with the bias
 
     float* stmAccumulator = accumulator.data();
@@ -62,17 +63,17 @@ float NN::forward(Accumulator& accumulator, const Features& features, Color stm)
     
     #pragma omp simd reduction(+:output)
     for (int i = 0; i < 2 * HIDDEN_SIZE; ++i){
-        accumulator[i] = CReLU(accumulator[i]);
+        activated[i] = CReLU(accumulator[i]);
     }
 
     #pragma omp simd reduction(+:output)
     for (int i = 0; i < HIDDEN_SIZE; ++i){
-        output += hiddenFeatures[i] * stmAccumulator[i];
+        output += hiddenFeatures[i] * activated[i];
     }
 
     #pragma omp simd reduction(+:output)
     for (int i = 0; i < HIDDEN_SIZE; ++i){
-        output += hiddenFeatures[HIDDEN_SIZE + i] * nstmAccumulator[i];
+        output += hiddenFeatures[HIDDEN_SIZE + i] * activated[HIDDEN_SIZE + i];
     }
     
     return output;

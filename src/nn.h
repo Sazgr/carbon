@@ -123,7 +123,7 @@ struct NN {
         std::memset(hiddenBias.data(), 0, sizeof(float) * OUTPUT_SIZE);
     }
 
-    float forward(Accumulator& accumulator, const Features& features, Color stm) const;
+    float forward(Accumulator& accumulator, Accumulator& activated, const Features& features, Color stm) const;
     void testFen(const std::string& fen) const;
     void load(const std::string& path);
     void save(const std::string& path);

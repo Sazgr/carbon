@@ -33,6 +33,7 @@ void Trainer::batch(std::array<uint8_t, INPUT_SIZE>& active) {
         DataLoader::DataSetEntry& entry = dataSetLoader.getEntry(batchIdx);
 
         alignas(32) NN::Accumulator accumulator;
+        alignas(32) NN::Accumulator activated;
         NN::Color                   stm        = NN::Color(entry.sideToMove());
         const Features&             featureset = entry.extractFeatures();
 
@@ -42,7 +43,7 @@ void Trainer::batch(std::array<uint8_t, INPUT_SIZE>& active) {
         const float expected = expectedEval(eval, wdl, lambda);
 
         //--- Forward Pass ---//
-        const float output = nn.forward(accumulator, featureset, stm);
+        const float output = nn.forward(accumulator, activated, featureset, stm);
 
         losses[threadId] += errorFunction(output, expected);
 
@@ -56,7 +57,7 @@ void Trainer::batch(std::array<uint8_t, INPUT_SIZE>& active) {
         // Hidden features
 #pragma omp simd
         for (int i = 0; i < HIDDEN_SIZE * 2; ++i) {
-            gradients.hiddenFeatures[i] += outGradient * accumulator[i];
+            gradients.hiddenFeatures[i] += outGradient * activated[i];
         }
 
         std::array<float, HIDDEN_SIZE * 2> hiddenLosses;
@@ -227,6 +228,7 @@ void        Trainer::validationBatch(std::vector<float>& validationLosses) {
         DataLoader::DataSetEntry& entry = valDataSetLoader.getEntry(batchIdx);
 
         alignas(32) NN::Accumulator accumulator;
+        alignas(32) NN::Accumulator activated;
         NN::Color                   stm        = NN::Color(entry.sideToMove());
         const Features&             featureset = entry.extractFeatures();
 
@@ -234,7 +236,7 @@ void        Trainer::validationBatch(std::vector<float>& validationLosses) {
         const auto wdl  = entry.wdl();
 
         //--- Forward Pass ---//
-        const float output = nn.forward(accumulator, featureset, stm);
+        const float output = nn.forward(accumulator, activated, featureset, stm);
 
         validationLosses[threadId] += errorFunction(output, eval, wdl);
     }
