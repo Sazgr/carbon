@@ -1,0 +1,14 @@
+#include "quantize.h"
+#include "nn.h"
+
+#pragma comment(linker, "/STACK:16777216")
+
+int main() {
+    std::cout << "ok" <<std::endl;
+    NN nn{};
+    std::cout << "ok" <<std::endl;
+    nn.load("C:\\git\\carbon\\net\\pk-012-stage3\\checkpoints\\pk-012-stage3_ep120.ckpt");
+    std::cout << "ok" <<std::endl;
+    nn.quantize("C:\\git\\carbon\\net\\requant\\pk-012-stage3_ep120.nn");
+    std::cout << "done" <<std::endl;
+}
