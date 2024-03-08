@@ -31,6 +31,16 @@ constexpr int KING_BUCKET[64] {
     2, 2, 3, 3, 3, 3, 2, 2,
     2, 2, 3, 3, 3, 3, 2, 2,
 };
+/*constexpr int KING_BUCKET[64] {
+    0, 0, 1, 1, 1, 1, 0, 0,
+    0, 0, 1, 1, 1, 1, 0, 0,
+    2, 2, 3, 3, 3, 3, 2, 2,
+    2, 2, 3, 3, 3, 3, 2, 2,
+    4, 4, 5, 5, 5, 5, 4, 4,
+    4, 4, 5, 5, 5, 5, 4, 4,
+    4, 4, 5, 5, 5, 5, 4, 4,
+    4, 4, 5, 5, 5, 5, 4, 4,
+};*/
 
 static inline int kingSquareIndex(int kingSquare, uint8_t kingColor) {
     if constexpr(BUCKETS > 1){
