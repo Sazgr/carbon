@@ -10,7 +10,7 @@
 
 constexpr int BUCKETS = 4;
 constexpr int INPUT_SIZE = 64 * 6 * 2 * BUCKETS;
-constexpr int HIDDEN_SIZE = 512;
+constexpr int HIDDEN_SIZE = 768;
 constexpr int OUTPUT_SIZE = 1;
 
 constexpr float EVAL_SCALE = 400.0f;
