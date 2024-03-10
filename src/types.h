@@ -8,7 +8,7 @@
 #include <chrono>
 #include <iomanip>
 
-constexpr int BUCKETS = 4;
+constexpr int BUCKETS = 6;
 constexpr int INPUT_SIZE = 64 * 6 * 2 * BUCKETS;
 constexpr int HIDDEN_SIZE = 768;
 constexpr int OUTPUT_SIZE = 1;
@@ -24,23 +24,13 @@ constexpr std::size_t VAL_EPOCH_SIZE = 1e7;
 constexpr int KING_BUCKET[64] {
     0, 0, 1, 1, 1, 1, 0, 0,
     0, 0, 1, 1, 1, 1, 0, 0,
-    0, 0, 1, 1, 1, 1, 0, 0,
-    0, 0, 1, 1, 1, 1, 0, 0,
     2, 2, 3, 3, 3, 3, 2, 2,
     2, 2, 3, 3, 3, 3, 2, 2,
-    2, 2, 3, 3, 3, 3, 2, 2,
-    2, 2, 3, 3, 3, 3, 2, 2,
+    4, 4, 5, 5, 5, 5, 4, 4,
+    4, 4, 5, 5, 5, 5, 4, 4,
+    4, 4, 5, 5, 5, 5, 4, 4,
+    4, 4, 5, 5, 5, 5, 4, 4,
 };
-/*constexpr int KING_BUCKET[64] {
-    0, 0, 1, 1, 1, 1, 0, 0,
-    0, 0, 1, 1, 1, 1, 0, 0,
-    2, 2, 3, 3, 3, 3, 2, 2,
-    2, 2, 3, 3, 3, 3, 2, 2,
-    4, 4, 5, 5, 5, 5, 4, 4,
-    4, 4, 5, 5, 5, 5, 4, 4,
-    4, 4, 5, 5, 5, 5, 4, 4,
-    4, 4, 5, 5, 5, 5, 4, 4,
-};*/
 
 static inline int kingSquareIndex(int kingSquare, uint8_t kingColor) {
     if constexpr(BUCKETS > 1){
