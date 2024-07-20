@@ -8,9 +8,9 @@
 #include <chrono>
 #include <iomanip>
 
-constexpr int BUCKETS = 6;
+constexpr int BUCKETS = 8;
 constexpr int INPUT_SIZE = 64 * 6 * 2 * BUCKETS;
-constexpr int HIDDEN_SIZE = 768;
+constexpr int HIDDEN_SIZE = 1536;
 constexpr int OUTPUT_SIZE = 1;
 
 constexpr float EVAL_SCALE = 400.0f;
@@ -23,13 +23,13 @@ constexpr std::size_t VAL_EPOCH_SIZE = 1e7;
 
 constexpr int KING_BUCKET[64] {
     0, 0, 1, 1, 1, 1, 0, 0,
-    0, 0, 1, 1, 1, 1, 0, 0,
-    2, 2, 3, 3, 3, 3, 2, 2,
     2, 2, 3, 3, 3, 3, 2, 2,
     4, 4, 5, 5, 5, 5, 4, 4,
     4, 4, 5, 5, 5, 5, 4, 4,
-    4, 4, 5, 5, 5, 5, 4, 4,
-    4, 4, 5, 5, 5, 5, 4, 4,
+    6, 6, 7, 7, 7, 7, 6, 6,
+    6, 6, 7, 7, 7, 7, 6, 6,
+    6, 6, 7, 7, 7, 7, 6, 6,
+    6, 6, 7, 7, 7, 7, 6, 6,
 };
 
 static inline int kingSquareIndex(int kingSquare, uint8_t kingColor) {
