@@ -9,7 +9,8 @@
 
 float errorGradient(float output, float eval, float wdl) {
     float expected = EVAL_CP_RATIO * sigmoid(eval) + (1 - EVAL_CP_RATIO) * wdl;
-    return 2.5 * pow(sigmoid(output) - expected, 1.5);
+    float difference = sigmoid(output) - expected;
+    return (difference >= 0 ? 1 : -1) * 2.5 * pow(abs(difference), 1.5);
 }
 
 void NN::testFen(const std::string& fen) const {

@@ -15,11 +15,12 @@ inline float errorGradient(float output, float eval, float wdl) {
 }
 
 inline float errorFunction(float output, float expected) {
-    return pow(sigmoid(output) - expected, 2.5);
+    return pow(abs(sigmoid(output) - expected), 2.5);
 }
 
 inline float errorGradient(float output, float expected) {
-    return 2.5 * pow(sigmoid(output) - expected, 1.5);
+    float difference = sigmoid(output) - expected;
+    return (difference >= 0 ? 1 : -1) * 2.5 * pow(abs(difference), 1.5);
 }
 
 void Trainer::batch(std::array<uint8_t, INPUT_SIZE>& active) {
