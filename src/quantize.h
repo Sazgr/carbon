@@ -5,8 +5,8 @@
 #include <iostream>
 #include <fstream>
 
-constexpr int Q1 = 181;
-constexpr int Q2 = 128;
+constexpr int Q1 = 256;
+constexpr int Q2 = 64;
 
 class QuantizedNN {
     public:

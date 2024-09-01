@@ -17,6 +17,7 @@ namespace Optimizer {
         grad.V = beta2 * grad.V + (1 - beta2) * gsum * gsum;
 
         v -= learningRate * grad.M / (sqrt(grad.V) + epsilon);
+        v = std::clamp<float>(v, -1.98, 1.98);
     }
 
     void Adamax::update(float& v, Gradient& grad, const float gsum, const float learningRate) {

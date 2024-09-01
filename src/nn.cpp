@@ -63,7 +63,7 @@ float NN::forward(Accumulator& accumulator, Accumulator& activated, const Featur
     
     #pragma omp simd reduction(+:output)
     for (int i = 0; i < 2 * HIDDEN_SIZE; ++i){
-        activated[i] = SCReLU(accumulator[i]);
+        activated[i] = XCReLU(accumulator[i]);
     }
 
     #pragma omp simd reduction(+:output)

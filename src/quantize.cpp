@@ -46,7 +46,7 @@ const int32_t QuantizedNN::forward(Accumulator& accumulator, Features& features,
     }
     
     for (int i = 0; i < HIDDEN_SIZE * 2; ++i){
-        accumulator[i] = SCReLU(accumulator[i]);
+        accumulator[i] = XCReLU(accumulator[i]);
     }
 
     #pragma omp simd reduction(+:output)

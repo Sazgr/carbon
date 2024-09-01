@@ -22,6 +22,12 @@ static inline const T SCReLU(const T x){
     return clipped * clipped;
 }
 
+template<typename T = float>
+static inline const T XCReLU(const T x){
+    T clipped = std::clamp<T>(x, 0, 1);
+    return x * clipped;
+}
+
 template<std::size_t N>
 static inline void vecReLU(float* v) {
   constexpr size_t width = sizeof(__m256) / sizeof(float);
@@ -71,6 +77,11 @@ template<typename T = float>
 static inline const T SCReLUPrime(const T x){
     return x > 0 && x < 1 ? 2 * x : 0;
 } 
+
+template<typename T = float>
+static inline const T XCReLUPrime(const T x){
+    return x >= 1 ? 1 : x > 0 ? 2 * x : 0;
+}
 
 template<typename T = float>
 static inline const T sigmoid(const T x){
