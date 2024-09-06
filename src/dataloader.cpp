@@ -54,30 +54,42 @@ namespace DataLoader {
             // Get info
             binpack::TrainingDataEntry entry = m_reader.next();
 
-            // Skip randomly
-            if (m_random_fen_skipping && dist(mt)) {
+            auto                 do_wld_skip = [&]() {
+                std::bernoulli_distribution distrib(1.0 - entry.score_result_prob() * entry.score_result_prob());
+                auto&                       prng = rng::get_thread_local_rng();
+                return distrib(prng);
+            };
+
+            auto do_skip = [&]() {
+                std::bernoulli_distribution distrib(prob);
+                auto&                       prng = rng::get_thread_local_rng();
+                return distrib(prng);
+            };
+
+            auto do_filter = [&]() {
+                return entry.isInCheck() || (entry.isCapturingMove() && (entry.score == 0 || entry.seeGE(0)));
+            };
+
+            // Allow for predetermined filtering without the need to remove positions from the dataset.
+            if (entry.score == VALUE_NONE)
+                continue;
+
+            constexpr int early_fen_skipping = 16;
+            if (entry.ply <= early_fen_skipping) {
                 continue;
             }
 
-            // Skip if the entry is too early
-            if (entry.ply <= 16) {
+            if (m_random_fen_skipping && do_skip()) {
                 continue;
             }
 
-            // Skip if the entry is a capturing move
-            if (entry.isCapturingMove()) {
+            bool filtered = true;
+            if (filtered && do_filter())
                 continue;
-            }
 
-            // Skip if the entry is in check
-            if (entry.isInCheck()) {
+            bool wld_filtered = true;
+            if (wld_filtered && do_wld_skip())
                 continue;
-            }
-
-            // Skip if the entry score is none
-            if (entry.score == VALUE_NONE) {
-                continue;
-            }
 
             m_buffer.push_back(entry);
         }
