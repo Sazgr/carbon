@@ -2,6 +2,7 @@
 #include "nn.h"
 #include "optimizer.h"
 #include <omp.h>
+#include <cassert>
 
 #define EPOCH_ERROR epochError / static_cast<double>(batchSize * batchIterations)
 
@@ -52,19 +53,19 @@ void Trainer::batch(std::array<uint8_t, INPUT_SIZE>& active) {
         const float     outGradient = errorGradient(output, expected) * sigmoidPrime(output);
 
         // Hidden bias
-        gradients.hiddenBias[0] += outGradient;
+        gradients.hiddenBias[featureset.output_bucket] += outGradient;
 
         // Hidden features
 #pragma omp simd
         for (int i = 0; i < HIDDEN_SIZE * 2; ++i) {
-            gradients.hiddenFeatures[i] += outGradient * activated[i];
+            gradients.hiddenFeatures[featureset.output_bucket * HIDDEN_SIZE * 2 + i] += outGradient * activated[i];
         }
 
         std::array<float, HIDDEN_SIZE * 2> hiddenLosses;
 
 #pragma omp simd
         for (int i = 0; i < HIDDEN_SIZE * 2; ++i) {
-            hiddenLosses[i] = outGradient * nn.hiddenFeatures[i] * SCReLUPrime(accumulator[i]);
+            hiddenLosses[i] = outGradient * nn.hiddenFeatures[featureset.output_bucket * HIDDEN_SIZE * 2 + i] * SCReLUPrime(accumulator[i]);
         }
 
         // Input bias
@@ -89,7 +90,7 @@ void Trainer::batch(std::array<uint8_t, INPUT_SIZE>& active) {
         }
     }
 
-#pragma for schedule(static) num_threads(THREADS)
+#pragma omp parallel for schedule(static) num_threads(THREADS)
     for (int i = 0; i < INPUT_SIZE; ++i) {
         for (int j = 0; j < THREADS; ++j) {
             active[i] |= actives[j][i];
@@ -128,7 +129,7 @@ void        Trainer::applyGradients(std::array<uint8_t, INPUT_SIZE>& actives) {
 
     // --- Hidden Features ---//
 #pragma omp parallel for schedule(static) num_threads(THREADS)
-    for (int i = 0; i < HIDDEN_SIZE * 2; ++i) {
+    for (int i = 0; i < HIDDEN_SIZE * OUTPUT_SIZE * 2; ++i) {
         float gradientSum = 0;
 
         for (int j = 0; j < THREADS; ++j) {
@@ -139,12 +140,16 @@ void        Trainer::applyGradients(std::array<uint8_t, INPUT_SIZE>& actives) {
     }
 
     //-- Hidden Bias --//
-    float gradientSum = 0;
-    for (int i = 0; i < THREADS; ++i) {
-        gradientSum += batchGradients[i].hiddenBias[0];
-    }
+#pragma omp parallel for schedule(static) num_threads(THREADS)
+    for (int i = 0; i < OUTPUT_SIZE; ++i) {
+        float gradientSum = 0;
 
-    optimizer.update(nn.hiddenBias[0], nnGradients.hiddenBias[0], gradientSum, learningRate);
+        for (int j = 0; j < THREADS; ++j) {
+            gradientSum += batchGradients[j].hiddenBias[i];
+        }
+
+        optimizer.update(nn.hiddenBias[i], nnGradients.hiddenBias[i], gradientSum, learningRate);
+    }
 }
 
 void Trainer::train() {

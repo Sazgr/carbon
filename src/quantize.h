@@ -17,7 +17,7 @@ class QuantizedNN {
 
     std::array<input_type, INPUT_SIZE * HIDDEN_SIZE> inputFeatures;
     std::array<input_type, HIDDEN_SIZE> inputBias;
-    std::array<hidden_type, HIDDEN_SIZE * 2> hiddenFeatures;
+    std::array<hidden_type, HIDDEN_SIZE * OUTPUT_SIZE * 2> hiddenFeatures;
     std::array<int32_t, OUTPUT_SIZE> hiddenBias;
 
     QuantizedNN(const NN& nn, bool print = false){
@@ -40,7 +40,7 @@ class QuantizedNN {
             inputBias[i] = a;
         }
 
-        for (int i = 0; i < HIDDEN_SIZE * 2; i++) {
+        for (int i = 0; i < HIDDEN_SIZE * OUTPUT_SIZE * 2; i++) {
             float w = nn.hiddenFeatures[i];
             hiddenMax = std::max(hiddenMax, w);
             int16_t a = static_cast<int16_t>(std::round(w * Q2));

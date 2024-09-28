@@ -46,7 +46,7 @@ void NN::testFen(const std::string& fen) const {
 
 // The forward pass of the network
 float NN::forward(Accumulator& accumulator, Accumulator& activated, const Features& features, Color stm) const {
-    float output = hiddenBias[0]; // Initialize with the bias
+    float output = hiddenBias[features.output_bucket]; // Initialize with the bias
 
     float* stmAccumulator = accumulator.data();
     float* nstmAccumulator = accumulator.data() + HIDDEN_SIZE;
@@ -67,13 +67,8 @@ float NN::forward(Accumulator& accumulator, Accumulator& activated, const Featur
     }
 
     #pragma omp simd reduction(+:output)
-    for (int i = 0; i < HIDDEN_SIZE; ++i){
-        output += hiddenFeatures[i] * activated[i];
-    }
-
-    #pragma omp simd reduction(+:output)
-    for (int i = 0; i < HIDDEN_SIZE; ++i){
-        output += hiddenFeatures[HIDDEN_SIZE + i] * activated[HIDDEN_SIZE + i];
+    for (int i = 0; i < HIDDEN_SIZE * 2; ++i){
+        output += hiddenFeatures[features.output_bucket * HIDDEN_SIZE * 2 + i] * activated[i];
     }
     
     return output;

@@ -1,5 +1,6 @@
 #include "dataloader.h"
 #include "nn.h"
+#include <algorithm>
 #include <ctime>
 
 namespace DataLoader {
@@ -100,8 +101,10 @@ namespace DataLoader {
     }
 
     void loadFeatures(const binpack::TrainingDataEntry& entry, Features& features) {
+        constexpr int value[7] = {0, 1, 1, 2, 4, 0, 0};
         features.clear();
         features.stm = static_cast<uint8_t>(entry.pos.sideToMove());
+        features.output_bucket = 0;
         
         const chess::Position& pos    = entry.pos;
         chess::Bitboard        pieces = pos.piecesBB();
@@ -118,7 +121,11 @@ namespace DataLoader {
             const int featureB = inputIndex(pieceType, pieceColor, static_cast<int>(sq), static_cast<uint8_t>(chess::Color::Black), static_cast<int>(ksq_Black));
 
             features.add(featureW, featureB);
+            features.output_bucket += value[pieceType];
         }
+        features.output_bucket = std::max(features.output_bucket - 1, 0);
+        features.output_bucket /= (24 / OUTPUT_BUCKETS);
+        features.output_bucket = std::clamp(features.output_bucket, 0, OUTPUT_BUCKETS - 1);
     }
 
 } // namespace DataLoader

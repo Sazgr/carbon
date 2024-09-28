@@ -8,10 +8,11 @@
 #include <chrono>
 #include <iomanip>
 
-constexpr int BUCKETS = 8;
-constexpr int INPUT_SIZE = 64 * 6 * 2 * BUCKETS;
+constexpr int INPUT_BUCKETS = 8;
+constexpr int OUTPUT_BUCKETS = 6;
+constexpr int INPUT_SIZE = 64 * 6 * 2 * INPUT_BUCKETS;
 constexpr int HIDDEN_SIZE = 512;
-constexpr int OUTPUT_SIZE = 1;
+constexpr int OUTPUT_SIZE = 1 * OUTPUT_BUCKETS;
 
 constexpr float EVAL_SCALE = 400.0f;
 constexpr float EVAL_CP_RATIO = 0.7f;
@@ -33,7 +34,7 @@ constexpr int KING_BUCKET[64] {
 };
 
 static inline int kingSquareIndex(int kingSquare, uint8_t kingColor) {
-    if constexpr(BUCKETS > 1){
+    if constexpr(INPUT_BUCKETS > 1){
         kingSquare = (56 * kingColor) ^ kingSquare;
         return KING_BUCKET[kingSquare];
     }else{

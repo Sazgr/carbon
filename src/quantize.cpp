@@ -30,7 +30,7 @@ void QuantizedNN::testFen(const std::string& fen){
 }
 
 const int32_t QuantizedNN::forward(Accumulator& accumulator, Features& features, Color stm) const{
-    int32_t output = hiddenBias[0]; // Initialize with the bias
+    int32_t output = hiddenBias[features.output_bucket]; // Initialize with the bias
 
     auto* stmAccumulator = accumulator.data();
     auto* nstmAccumulator = accumulator.data() + HIDDEN_SIZE;
@@ -51,12 +51,12 @@ const int32_t QuantizedNN::forward(Accumulator& accumulator, Features& features,
 
     #pragma omp simd reduction(+:output)
     for (int i = 0; i < HIDDEN_SIZE; ++i){
-        output += hiddenFeatures[i] * stmAccumulator[i];
+        output += hiddenFeatures[features.output_bucket * HIDDEN_SIZE * 2 + i] * stmAccumulator[i];
     }
 
     #pragma omp simd reduction(+:output)
     for (int i = 0; i < HIDDEN_SIZE; ++i){
-        output += hiddenFeatures[HIDDEN_SIZE + i] * nstmAccumulator[i];
+        output += hiddenFeatures[features.output_bucket * HIDDEN_SIZE * 2 + HIDDEN_SIZE + i] * nstmAccumulator[i];
     }
     
     return output / (Q1 * Q2);

@@ -90,6 +90,7 @@ inline float errorFunction(float output, float eval, float wdl) {
 struct Features
 {
     uint8_t n = 0;
+    int output_bucket = 0;
     std::array<std::array<int16_t, 2>, 32> features;
 
     uint8_t stm;
@@ -113,7 +114,7 @@ struct NN {
 
     std::array<float, INPUT_SIZE * HIDDEN_SIZE> inputFeatures;
     std::array<float, HIDDEN_SIZE> inputBias;
-    std::array<float, HIDDEN_SIZE * 2> hiddenFeatures;
+    std::array<float, HIDDEN_SIZE * OUTPUT_SIZE * 2> hiddenFeatures;
     std::array<float, OUTPUT_SIZE> hiddenBias;
 
     NN(){
@@ -126,7 +127,7 @@ struct NN {
             inputFeatures[i] = input_distribution(gen);
         }
 
-        for (int i = 0; i < HIDDEN_SIZE * 2; i++) {
+        for (int i = 0; i < HIDDEN_SIZE * OUTPUT_SIZE * 2; i++) {
             hiddenFeatures[i] = hidden_distribution(gen);
         }
 
